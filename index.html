@@ -3,71 +3,140 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fluorophore Spectra — Prebuilt Library</title>
+  <title>Fluorophore Spectra — Collapsible Searchable Dropdowns (Fixed)</title>
   <style>
     :root{
-      --bg:#f5f7fb; --panel:#fff; --text:#1d2a39; --muted:#5b6876; --grid:#dfe6ef;
+      --bg:#f5f7fb; --panel:#fff; --text:#1d2a39; --muted:#5b6876; --accent:#2b6be3;
     }
-    body{margin:0;font-family:Inter, Arial, Helvetica, sans-serif;background:linear-gradient(180deg,#f4f7fb 0%,#edf2f8 100%);color:var(--text);display:flex;justify-content:center;padding:28px}
-    .card{width:min(1200px,98vw);background:var(--panel);border-radius:12px;box-shadow:0 10px 30px rgba(23,33,48,0.08);padding:18px;position:relative}
+    html,body{height:100%;margin:0;font-family:Inter, Arial, Helvetica, sans-serif;background:linear-gradient(180deg,#f4f7fb 0%,#edf2f8 100%);color:var(--text);display:flex;justify-content:center;padding:24px}
+    .card{width:min(1280px,98vw);background:var(--panel);border-radius:12px;padding:18px;box-shadow:0 10px 30px rgba(23,33,48,0.08)}
     header{display:flex;align-items:center;justify-content:space-between;gap:12px}
     h1{margin:0;font-size:1.25rem}
-    .controls{display:flex;gap:10px;align-items:center}
-    select{min-width:260px;max-width:420px;height:240px;border-radius:6px;border:1px solid #d8e0ea;padding:8px;background:#fff;color:var(--text);overflow:auto}
-    .btn{background:#2b6be3;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
-    .btn.secondary{background:#f0f4f8;color:#233240}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+    .dropdown{
+      width:320px;
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .dd-toggle{
+      display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid #d8e0ea;background:#fff;cursor:pointer;
+      min-height:44px;justify-content:space-between;
+    }
+    .dd-toggle .tags{display:flex;gap:6px;flex-wrap:wrap;max-width:230px}
+    .tag{background:#eef6ff;color:var(--accent);padding:4px 8px;border-radius:999px;font-size:0.85rem;border:1px solid rgba(43,107,227,0.12)}
+    .dd-caret{width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin-left:6px}
+    .dd-panel{
+      position:absolute;z-index:1200;top:calc(100% + 8px);left:0;right:0;background:#fff;border-radius:8px;border:1px solid #e6eef8;
+      box-shadow:0 10px 30px rgba(16,24,40,0.08);padding:10px;display:none;max-height:320px;overflow:auto;
+    }
+    .dd-open .dd-panel{display:block}
+    .search-box{width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #e6eef8}
+    .options{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+    .option{display:flex;align-items:center;gap:8px;padding:6px;border-radius:6px;cursor:pointer}
+    .option:hover{background:#f6fbff}
+    .opt-checkbox{width:16px;height:16px;border:1px solid #cbdbea;border-radius:3px;background:#fff;display:inline-block}
+    .opt-checkbox.checked{background:var(--accent);border-color:var(--accent)}
+    .dd-actions{display:flex;gap:8px;justify-content:space-between;margin-top:8px}
+    .btn{background:var(--accent);color:#fff;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+    .btn.ghost{background:#f0f4f8;color:var(--text);border:1px solid #e4edf8}
     .row{display:flex;gap:20px;margin-top:14px}
-    #plot{flex:1 1 680px;border-radius:10px;background:white;padding:10px;box-shadow:0 6px 18px rgba(16,24,40,0.04);position:relative}
-    .sidebar{width:320px;display:flex;flex-direction:column;gap:12px}
+    #plot{flex:1 1 760px;border-radius:10px;background:#fff;padding:10px;box-shadow:0 6px 18px rgba(16,24,40,0.04);position:relative}
+    .sidebar{width:360px;display:flex;flex-direction:column;gap:12px}
     .legend{background:#fff;border-radius:8px;padding:10px;border:1px solid #eef3f8;max-height:520px;overflow:auto}
     .legend-item{display:flex;gap:10px;align-items:center;padding:6px 4px}
-    .swatch{width:42px;height:18px;border-radius:6px;border:1px solid rgba(0,0,0,0.06);flex-shrink:0}
+    .swatch{width:42px;height:18px;border-radius:6px;border:1px solid rgba(0,0,0,0.06)}
+    .filter-swatch{width:42px;height:18px;border-radius:4px;border:1px dashed rgba(0,0,0,0.06)}
     .muted{color:var(--muted);font-size:0.95rem}
-    .note{font-size:0.86rem;color:var(--muted)}
     .tooltip{position:absolute;pointer-events:none;background:rgba(18,24,32,0.95);color:#fff;padding:8px 10px;border-radius:8px;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,0.3);transform:translate(-50%,-120%);white-space:nowrap;z-index:2000;display:none}
-    .tooltip .sw{display:inline-block;width:10px;height:10px;margin-right:8px;vertical-align:middle;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+    .tooltip .sw{display:inline-block;width:10px;height:10px;margin-right:8px;vertical-align:middle;border-radius:2px}
     footer{margin-top:12px;color:var(--muted);font-size:0.9rem}
-    @media (max-width:1000px){.row{flex-direction:column}.sidebar{width:100%}select{height:180px}}
+    @media (max-width:1100px){.row{flex-direction:column}.sidebar{width:100%}.dropdown{width:100%}}
   </style>
 </head>
 <body>
-  <div class="card" role="application" aria-label="Fluorophore spectra viewer">
+  <div class="card" role="application" aria-label="Fluorophore + filter viewer">
     <header>
-      <h1>Fluorophore Excitation & Emission Viewer — Prebuilt Library</h1>
-      <div class="controls" aria-hidden="false">
-        <div>
-          <label class="note" for="fluoro-select">Select fluorophores (Ctrl/Cmd to multi-select):</label><br/>
-          <select id="fluoro-select" multiple size="12" aria-label="Fluorophore list"></select>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <button id="select-all" class="btn">Select all</button>
-          <button id="clear" class="btn secondary">Clear</button>
-        </div>
+      <h1>Fluorophore Spectra — Collapsible Searchable Dropdowns (Fixed)</h1>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="muted">Select fluorophores and filter sets to display</div>
       </div>
     </header>
 
+    <div class="controls" style="margin-top:12px">
+      <div class="dropdown" id="dd-fluoro" aria-haspopup="listbox">
+        <div class="dd-toggle" id="dd-fluoro-toggle" tabindex="0" role="button" aria-expanded="false">
+          <div>
+            <strong>Fluorophores</strong><div class="muted" style="font-size:0.85rem">choose one or more</div>
+          </div>
+          <div style="display:flex;align-items:center">
+            <div class="tags" id="tags-fluoro"></div>
+            <div class="dd-caret" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="dd-panel" id="panel-fluoro" role="dialog" aria-label="Fluorophore list">
+          <input id="search-fluoro" class="search-box" placeholder="Search fluorophores..." aria-label="Search fluorophores" />
+          <div class="options" id="options-fluoro" role="listbox"></div>
+          <div class="dd-actions">
+            <div style="display:flex;gap:8px">
+              <button id="fa-select-all" class="btn">Select all</button>
+              <button id="fa-clear" class="btn ghost">Clear</button>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button id="fa-done" class="btn ghost">Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dropdown" id="dd-filter">
+        <div class="dd-toggle" id="dd-filter-toggle" tabindex="0" role="button" aria-expanded="false">
+          <div>
+            <strong>Filter sets</strong><div class="muted" style="font-size:0.85rem">choose one or more</div>
+          </div>
+          <div style="display:flex;align-items:center">
+            <div class="tags" id="tags-filter"></div>
+            <div class="dd-caret" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="dd-panel" id="panel-filter" role="dialog" aria-label="Filter set list">
+          <input id="search-filter" class="search-box" placeholder="Search filter sets..." aria-label="Search filter sets" />
+          <div class="options" id="options-filter" role="listbox"></div>
+          <div class="dd-actions">
+            <div style="display:flex;gap:8px">
+              <button id="fs-select-all" class="btn">Select all</button>
+              <button id="fs-clear" class="btn ghost">Clear</button>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button id="fs-done" class="btn ghost">Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row">
-      <div id="plot" aria-hidden="false">
-        <svg id="spectra-svg" viewBox="0 0 1200 760" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fluorophore spectra chart" width="100%" height="100%"></svg>
+      <div id="plot">
+        <svg id="spectra-svg" viewBox="0 0 1200 760" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"></svg>
         <div id="tooltip" class="tooltip" role="tooltip" aria-hidden="true"><span class="sw"></span><span id="tt-text"></span></div>
       </div>
 
       <aside class="sidebar">
         <div class="legend" id="legend" aria-live="polite">
-          <div class="muted">Legend (selected fluorophores will appear here)</div>
+          <div class="muted">Legend: selected fluorophores & filters</div>
         </div>
-        <div class="note">Excitation curves: dashed lines. Emission curves: solid lines + filled area. Values are approximate — replace with measured spectra if needed.</div>
+        <div class="muted" style="font-size:0.9rem">Excitation: dashed. Emission: solid + filled. Hover curves & filters for details.</div>
       </aside>
     </div>
 
-    <footer>Wavelength axis: 350–800 nm. Relative intensity is normalized per-fluorophore for display.</footer>
+    <footer>Wavelength axis: 350–800 nm. Values are synthetic approximations for visualization.</footer>
   </div>
 
 <script>
-/*
- Prebuilt fluorophore list with approximate excitation/emission peaks and display FWHM.
- Values are typical approximate centers and synthetic bandwidths for visualization purposes.
-*/
+/* ---------- Prebuilt data ---------- */
 const fluorophores = [
   { name: "DAPI", excPeak: 358, excFwhm: 20, emPeak: 461, emFwhm: 25 },
   { name: "Hoechst 33342", excPeak: 350, excFwhm: 20, emPeak: 461, emFwhm: 30 },
@@ -105,6 +174,25 @@ const fluorophores = [
   { name: "Alexa Fluor 680", excPeak: 679, excFwhm: 36, emPeak: 702, emFwhm: 36 }
 ];
 
+const filterSets = [
+  { name: "DAPI (UV)", ex: [340, 380], em: [420, 480], color: "#6a89cc" },
+  { name: "Hoechst", ex: [345, 380], em: [420, 480], color: "#5d9cec" },
+
+  { name: "FITC/GFP", ex: [470, 495], em: [500, 540], color: "#61d04b" },
+  { name: "Alexa 488", ex: [480, 500], em: [510, 540], color: "#32c48d" },
+
+  { name: "TRITC/Cy3", ex: [530, 560], em: [565, 615], color: "#ff7f50" },
+  { name: "Texas Red", ex: [560, 590], em: [600, 640], color: "#ff4d4f" },
+
+  { name: "mCherry/Alexa 568", ex: [565, 595], em: [600, 630], color: "#ff6b6b" },
+
+  { name: "Cy5 / Alexa 647", ex: [630, 660], em: [660, 700], color: "#9b59b6" },
+  { name: "Cy5.5", ex: [670, 690], em: [690, 720], color: "#8e44ad" },
+
+  { name: "Near-IR (Cy7)", ex: [740, 760], em: [760, 790], color: "#4b7bec" }
+];
+
+/* ---------- Plotting geometry & utilities ---------- */
 const svg = document.getElementById('spectra-svg');
 const tooltip = document.getElementById('tooltip');
 const ttText = document.getElementById('tt-text');
@@ -115,203 +203,282 @@ const left = 120, right = 930, top = 80, bottom = 640;
 const plotWidth = right - left, plotHeight = bottom - top;
 svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
-// Math utilities
-function gaussian(w, peak, fwhm) {
-  const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2)));
-  return Math.exp(-0.5 * Math.pow((w - peak) / sigma, 2));
-}
-
-// approximate wavelength -> rgb
-function wavelengthToRgb(wavelength) {
-  const w = Number(wavelength);
-  if (w < 380 || w > 780) return { r: 0, g: 0, b: 0 };
+function gaussian(w, peak, fwhm) { const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2))); return Math.exp(-0.5 * Math.pow((w - peak) / sigma, 2)); }
+function wavelengthToRgb(w) {
+  const wv = Number(w);
+  if (wv < 380 || wv > 780) return { r: 0, g: 0, b: 0 };
   let r = 0, g = 0, b = 0;
-  if (w < 440) { r = -(w - 440) / (440 - 380); b = 1; }
-  else if (w < 490) { g = (w - 440) / (490 - 440); b = 1; }
-  else if (w < 510) { g = 1; b = -(w - 510) / (510 - 490); }
-  else if (w < 580) { r = (w - 510) / (580 - 510); g = 1; }
-  else if (w < 645) { r = 1; g = -(w - 645) / (645 - 580); }
+  if (wv < 440) { r = -(wv - 440) / (440 - 380); b = 1; }
+  else if (wv < 490) { g = (wv - 440) / (490 - 440); b = 1; }
+  else if (wv < 510) { g = 1; b = -(wv - 510) / (510 - 490); }
+  else if (wv < 580) { r = (wv - 510) / (580 - 510); g = 1; }
+  else if (wv < 645) { r = 1; g = -(wv - 645) / (645 - 580); }
   else { r = 1; }
   let factor = 1;
-  if (w < 420) factor = 0.3 + 0.7 * (w - 380) / (420 - 380);
-  else if (w > 700) factor = 0.3 + 0.7 * (780 - w) / (80);
+  if (wv < 420) factor = 0.3 + 0.7 * (wv - 380) / (420 - 380);
+  else if (wv > 700) factor = 0.3 + 0.7 * (780 - wv) / 80;
   const gamma = 0.8;
   const adj = (c) => c <= 0 ? 0 : Math.pow(c * factor, gamma);
   return { r: adj(r), g: adj(g), b: adj(b) };
 }
-function rgbString(rgb) { const r = Math.round(rgb.r * 255), g = Math.round(rgb.g * 255), b = Math.round(rgb.b * 255); return `rgb(${r},${g},${b})`; }
+function rgbString(rgb) { const r = Math.round(rgb.r*255), g = Math.round(rgb.g*255), b = Math.round(rgb.b*255); return `rgb(${r},${g},${b})`; }
+function xForWavelength(w){ const min=350,max=800; return left + ((w-min)/(max-min)) * plotWidth; }
+function wavelengthForX(xSvg){ const min=350,max=800; return min + ((xSvg-left)/plotWidth)*(max-min); }
+function yForIntensity(v){ return bottom - v * plotHeight; }
+function createSvg(tag, attrs={}){ const el = document.createElementNS('http://www.w3.org/2000/svg', tag); Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v)); return el; }
 
-function xForWavelength(w) {
-  const minW = 350, maxW = 800;
-  const n = (w - minW) / (maxW - minW);
-  return left + n * plotWidth;
-}
-function wavelengthForX(xSvg) {
-  const minW = 350, maxW = 800;
-  const n = (xSvg - left) / plotWidth;
-  return minW + n * (maxW - minW);
-}
-function yForIntensity(v) { return bottom - v * plotHeight; }
-
-function createSvgElement(tag, attrs = {}) {
-  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k, v));
-  return el;
-}
-
+/* ---------- Grid & drawing ---------- */
 function drawGrid(){
   const base = svg.querySelector('#base-layer'); if (base) base.remove();
-  const g = document.createElementNS(svg.namespaceURI,'g'); g.id = 'base-layer';
-  const xTicks = [350,400,450,500,550,600,650,700,750,800];
-  xTicks.forEach(tick => {
+  const g = createSvg('g',{id:'base-layer'});
+  [350,400,450,500,550,600,650,700,750,800].forEach(tick => {
     const x = xForWavelength(tick);
-    const line = createSvgElement('line',{x1:x,y1:top,x2:x,y2:bottom,stroke:'#e7eef6','stroke-width':1});
-    g.appendChild(line);
-    const lab = createSvgElement('text',{x:x,y:bottom+24,'text-anchor':'middle',fill:'#5b6876','font-size':12});
+    g.appendChild(createSvg('line',{x1:x,y1:top,x2:x,y2:bottom,stroke:'#e7eef6','stroke-width':1}));
+    const lab = createSvg('text',{x:x,y:bottom+24,'text-anchor':'middle',fill:'#5b6876','font-size':12});
     lab.textContent = tick; g.appendChild(lab);
   });
-  const yTicks = [0,0.2,0.4,0.6,0.8,1.0];
-  yTicks.forEach(tick => {
-    const y = yForIntensity(tick);
-    const line = createSvgElement('line',{x1:left,y1:y,x2:right,y2:y,stroke:'#eef6fb','stroke-width':1});
-    g.appendChild(line);
-    const lab = createSvgElement('text',{x:left-14,y:y+4,'text-anchor':'end',fill:'#5b6876','font-size':12});
-    lab.textContent = tick.toFixed(1); g.appendChild(lab);
+  [0,0.2,0.4,0.6,0.8,1.0].forEach(t => {
+    const y = yForIntensity(t);
+    g.appendChild(createSvg('line',{x1:left,y1:y,x2:right,y2:y,stroke:'#eef6fb','stroke-width':1}));
+    const lab = createSvg('text',{x:left-14,y:y+4,'text-anchor':'end',fill:'#5b6876','font-size':12}); lab.textContent = t.toFixed(1); g.appendChild(lab);
   });
-  const xAxis = createSvgElement('line',{x1:left,y1:bottom,x2:right,y2:bottom,stroke:'#6b7a8c','stroke-width':2});
-  const yAxis = createSvgElement('line',{x1:left,y1:top,x2:left,y2:bottom,stroke:'#6b7a8c','stroke-width':2});
-  g.appendChild(xAxis); g.appendChild(yAxis);
-  const title = createSvgElement('text',{x:(left+right)/2,y:34,'text-anchor':'middle','font-size':20,'font-weight':700});
-  title.textContent = 'Fluorophore Excitation and Emission Spectra'; g.appendChild(title);
-  const xLabel = createSvgElement('text',{x:(left+right)/2,y:700,'text-anchor':'middle','font-size':16}); xLabel.textContent='Wavelength (nm)'; g.appendChild(xLabel);
-  const yLabel = createSvgElement('text',{x:24,y:(top+bottom)/2,transform:`rotate(-90 24 ${(top+bottom)/2})`,'text-anchor':'middle','font-size':16}); yLabel.textContent='Relative intensity'; g.appendChild(yLabel);
+  g.appendChild(createSvg('line',{x1:left,y1:bottom,x2:right,y2:bottom,stroke:'#6b7a8c','stroke-width':2}));
+  g.appendChild(createSvg('line',{x1:left,y1:top,x2:left,y2:bottom,stroke:'#6b7a8c','stroke-width':2}));
+  const title = createSvg('text',{x:(left+right)/2,y:34,'text-anchor':'middle','font-size':20,'font-weight':700}); title.textContent = 'Fluorophore Excitation and Emission Spectra'; g.appendChild(title);
+  g.appendChild(createSvg('text',{x:(left+right)/2,y:700,'text-anchor':'middle','font-size':16})).textContent = 'Wavelength (nm)';
+  g.appendChild(createSvg('text',{x:24,y:(top+bottom)/2,transform:`rotate(-90 24 ${(top+bottom)/2})`,'text-anchor':'middle','font-size':16})).textContent='Relative intensity';
   svg.appendChild(g);
 }
 
+/* ---------- Spectra & filter drawing (with hit paths & tooltip handling) ---------- */
 function drawSpectra(selectedNames){
   const old = svg.querySelector('#spectra-group'); if (old) old.remove();
-  const g = document.createElementNS(svg.namespaceURI,'g'); g.id='spectra-group';
-  const wavelengths = [];
-  const step = 2;
-  for (let w=350; w<=800; w+=step) wavelengths.push(w);
+  const g = createSvg('g',{id:'spectra-group'});
+  const wavelengths = []; const step=2; for (let w=350; w<=800; w+=step) wavelengths.push(w);
 
-  selectedNames.forEach((name, idx) => {
+  selectedNames.forEach(name => {
     const f = fluorophores.find(x => x.name === name); if (!f) return;
-    const excValsRaw = wavelengths.map(w => gaussian(w, f.excPeak, f.excFwhm));
-    const emValsRaw = wavelengths.map(w => gaussian(w, f.emPeak, f.emFwhm));
-    const excMax = Math.max(...excValsRaw) || 1; const emMax = Math.max(...emValsRaw) || 1;
-    const excVals = excValsRaw.map(v => v / excMax); const emVals = emValsRaw.map(v => v / emMax);
-    const excPoints = wavelengths.map((w,i)=>[xForWavelength(w), yForIntensity(excVals[i])]);
-    const emPoints = wavelengths.map((w,i)=>[xForWavelength(w), yForIntensity(emVals[i])]);
-    const createPath = (pts) => pts.map((p,i)=> (i===0?'M':'L') + ' ' + p[0] + ' ' + p[1]).join(' ');
-    const rgb = wavelengthToRgb(f.emPeak); const color = rgbString(rgb);
+    const excRaw = wavelengths.map(w => gaussian(w, f.excPeak, f.excFwhm));
+    const emRaw = wavelengths.map(w => gaussian(w, f.emPeak, f.emFwhm));
+    const excMax = Math.max(...excRaw) || 1, emMax = Math.max(...emRaw) || 1;
+    const exc = excRaw.map(v => v/excMax), em = emRaw.map(v => v/emMax);
+    const excPts = wavelengths.map((w,i)=>[xForWavelength(w), yForIntensity(exc[i])]);
+    const emPts = wavelengths.map((w,i)=>[xForWavelength(w), yForIntensity(em[i])]);
+    const pathFrom = (pts) => pts.map((p,i)=> (i===0?'M':'L')+' '+p[0]+' '+p[1]).join(' ');
+    const color = rgbString(wavelengthToRgb(f.emPeak));
 
-    // excitation dashed line
-    const excPath = createSvgElement('path',{d:createPath(excPoints),fill:'none',stroke:color,'stroke-width':2,'stroke-dasharray':'8 6','opacity':0.9});
-    g.appendChild(excPath);
+    g.appendChild(createSvg('path',{d:pathFrom(excPts),fill:'none',stroke:color,'stroke-width':2,'stroke-dasharray':'8 6','opacity':0.9}));
+    const areaStr = pathFrom(emPts)+` L ${xForWavelength(800)} ${bottom} L ${xForWavelength(350)} ${bottom} Z`;
+    g.appendChild(createSvg('path',{d:areaStr,fill:color,'fill-opacity':0.18,stroke:color,'stroke-width':1.2,'opacity':0.9}));
+    g.appendChild(createSvg('path',{d:pathFrom(emPts),fill:'none',stroke:color,'stroke-width':2.5,'opacity':1.0}));
 
-    // emission filled area
-    const areaPathStr = createPath(emPoints) + ` L ${xForWavelength(800)} ${bottom} L ${xForWavelength(350)} ${bottom} Z`;
-    const area = createSvgElement('path',{d:areaPathStr,fill:color,'fill-opacity':0.18,stroke:color,'stroke-width':1.2,'opacity':0.9});
-    g.appendChild(area);
+    const excHit = createSvg('path',{d:pathFrom(excPts),stroke:'rgba(0,0,0,0.03)','stroke-width':14,fill:'none','opacity':0.01});
+    excHit.style.cursor = 'crosshair'; excHit._meta = { name:f.name, type:'Excitation', wavelengths: wavelengths, values: exc, color };
+    attachHoverHandlers(excHit); g.appendChild(excHit);
 
-    // emission solid line
-    const emPath = createSvgElement('path',{d:createPath(emPoints),fill:'none',stroke:color,'stroke-width':2.5,'opacity':1.0});
-    g.appendChild(emPath);
-
-    // Hit paths for hover (excitation)
-    const excHit = createSvgElement('path',{d:createPath(excPoints),stroke:'rgba(0,0,0,0.03)','stroke-width':14,fill:'none','opacity':0.01});
-    excHit.style.cursor = 'crosshair';
-    excHit._meta = { name: f.name, type: 'Excitation', wavelengths, values: excVals, color };
-    attachHoverHandlers(excHit);
-    g.appendChild(excHit);
-
-    // Hit path for emission
-    const emHit = createSvgElement('path',{d:createPath(emPoints),stroke:'rgba(0,0,0,0.03)','stroke-width':14,fill:'none','opacity':0.01});
-    emHit.style.cursor = 'crosshair';
-    emHit._meta = { name: f.name, type: 'Emission', wavelengths, values: emVals, color };
-    attachHoverHandlers(emHit);
-    g.appendChild(emHit);
+    const emHit = createSvg('path',{d:pathFrom(emPts),stroke:'rgba(0,0,0,0.03)','stroke-width':14,fill:'none','opacity':0.01});
+    emHit.style.cursor = 'crosshair'; emHit._meta = { name:f.name, type:'Emission', wavelengths: wavelengths, values: em, color };
+    attachHoverHandlers(emHit); g.appendChild(emHit);
   });
 
   svg.appendChild(g);
-  updateLegend(selectedNames);
+  updateLegend();
+}
+
+function drawFilters(selectedFilterNames){
+  const old = svg.querySelector('#filter-layer'); if (old) old.remove();
+  const layer = createSvg('g',{id:'filter-layer'});
+  if (!selectedFilterNames || selectedFilterNames.length===0){ svg.appendChild(layer); updateLegend(); return; }
+  selectedFilterNames.forEach(fname => {
+    const fs = filterSets.find(x => x.name === fname); if (!fs) return;
+    const exLow = Math.max(350, fs.ex[0]), exHigh = Math.min(800, fs.ex[1]);
+    const emLow = Math.max(350, fs.em[0]), emHigh = Math.min(800, fs.em[1]);
+    const exX = xForWavelength(exLow), exW = xForWavelength(exHigh)-exX;
+    const emX = xForWavelength(emLow), emW = xForWavelength(emHigh)-emX;
+
+    const exRect = createSvg('rect',{x:exX,y:top,width:Math.max(exW,1),height:plotHeight,fill:fs.color,'fill-opacity':0.10,stroke:fs.color,'stroke-width':1,'stroke-dasharray':'4 4'});
+    exRect.style.cursor='pointer'; exRect._meta = { name:fs.name, band:'Excitation', range:[exLow,exHigh], color:fs.color }; attachFilterHover(exRect); layer.appendChild(exRect);
+    layer.appendChild(createSvg('text',{x:exX+Math.max(6,exW/2),y:top-12,'text-anchor':'middle','font-size':12,fill:fs.color})).textContent = fs.name + ' (EX)';
+
+    const emRect = createSvg('rect',{x:emX,y:top,width:Math.max(emW,1),height:plotHeight,fill:fs.color,'fill-opacity':0.08,stroke:fs.color,'stroke-width':1,'stroke-dasharray':'2 6'});
+    emRect.style.cursor='pointer'; emRect._meta = { name:fs.name, band:'Emission', range:[emLow,emHigh], color:fs.color }; attachFilterHover(emRect); layer.appendChild(emRect);
+    layer.appendChild(createSvg('text',{x:emX+Math.max(6,emW/2),y:bottom+18,'text-anchor':'middle','font-size':12,fill:fs.color})).textContent = fs.name + ' (EM)';
+  });
+  svg.appendChild(layer);
+  updateLegend();
+}
+
+/* ---------- Hover helpers ---------- */
+function attachFilterHover(rectEl){
+  rectEl.addEventListener('mousemove', evt => {
+    const meta = rectEl._meta; if (!meta) return;
+    ttText.innerHTML = `<strong>${meta.name}</strong> · ${meta.band}<br>${meta.range[0]}–${meta.range[1]} nm`;
+    ttSw.style.background = meta.color;
+    const plotRect = document.getElementById('plot').getBoundingClientRect();
+    let leftPx = evt.clientX - plotRect.left; let topPx = evt.clientY - plotRect.top - 8;
+    tooltip.style.display='block'; tooltip.setAttribute('aria-hidden','false');
+    const ttRect = tooltip.getBoundingClientRect(); const margin = 8;
+    const maxLeft = plotRect.width - ttRect.width - margin;
+    if (leftPx > maxLeft) leftPx = maxLeft; if (leftPx < margin) leftPx = margin;
+    if (topPx < margin) topPx = margin;
+    tooltip.style.left = `${leftPx}px`; tooltip.style.top = `${topPx}px`;
+  });
+  rectEl.addEventListener('mouseleave', ()=>{ tooltip.style.display='none'; tooltip.setAttribute('aria-hidden','true'); });
 }
 
 function attachHoverHandlers(pathEl){
-  pathEl.addEventListener('mousemove', (evt) => {
+  pathEl.addEventListener('mousemove', evt => {
     const rect = svg.getBoundingClientRect();
     const xSvg = evt.clientX - rect.left;
-    const ySvg = evt.clientY - rect.top;
     const w = wavelengthForX(xSvg);
     const meta = pathEl._meta; if (!meta) return;
     const step = meta.wavelengths[1] - meta.wavelengths[0];
     let idx = Math.round((w - meta.wavelengths[0]) / step);
     if (idx < 0) idx = 0; if (idx >= meta.values.length) idx = meta.values.length - 1;
     const wNearest = meta.wavelengths[idx]; const val = meta.values[idx];
-
-    ttText.innerHTML = `<strong>${meta.name}</strong> &middot; ${meta.type}<br>${wNearest.toFixed(0)} nm — ${val.toFixed(3)} a.u.`;
+    ttText.innerHTML = `<strong>${meta.name}</strong> · ${meta.type}<br>${wNearest.toFixed(0)} nm — ${val.toFixed(3)} a.u.`;
     ttSw.style.background = meta.color;
-
     const plotRect = document.getElementById('plot').getBoundingClientRect();
-    let leftPx = evt.clientX - plotRect.left;
-    let topPx = evt.clientY - plotRect.top;
-    topPx -= 16;
-    const tt = tooltip; tt.style.display = 'block'; tt.setAttribute('aria-hidden','false');
-    const ttRect = tt.getBoundingClientRect();
-    const margin = 8;
+    let leftPx = evt.clientX - plotRect.left; let topPx = evt.clientY - plotRect.top - 12;
+    tooltip.style.display='block'; tooltip.setAttribute('aria-hidden','false');
+    const ttRect = tooltip.getBoundingClientRect(); const margin = 8;
     const maxLeft = plotRect.width - ttRect.width - margin;
     if (leftPx > maxLeft) leftPx = maxLeft; if (leftPx < margin) leftPx = margin;
     if (topPx < margin) topPx = margin;
-    tt.style.left = `${leftPx}px`; tt.style.top = `${topPx}px`;
+    tooltip.style.left = `${leftPx}px`; tooltip.style.top = `${topPx}px`;
   });
-
-  pathEl.addEventListener('mouseleave', () => {
-    tooltip.style.display = 'none'; tooltip.setAttribute('aria-hidden','true');
-  });
+  pathEl.addEventListener('mouseleave', ()=>{ tooltip.style.display='none'; tooltip.setAttribute('aria-hidden','true'); });
 }
 
-function updateLegend(selectedNames){
+/* ---------- Legend ---------- */
+function updateLegend(){
   const legend = document.getElementById('legend'); legend.innerHTML = '';
-  if (!selectedNames || selectedNames.length === 0) {
-    const m = document.createElement('div'); m.className = 'muted'; m.textContent = 'No fluorophores selected'; legend.appendChild(m); return;
+  const selFl = getSelectedFromState('fluoro');
+  const selFs = getSelectedFromState('filter');
+  if (selFl.length===0 && selFs.length===0){ const m=document.createElement('div'); m.className='muted'; m.textContent='No fluorophores or filters selected'; legend.appendChild(m); return; }
+  if (selFl.length){
+    const t = document.createElement('div'); t.className='muted'; t.textContent='Fluorophores'; legend.appendChild(t);
+    selFl.forEach(name => { const f = fluorophores.find(x=>x.name===name); if (!f) return;
+      const item = document.createElement('div'); item.className='legend-item';
+      const sw = document.createElement('div'); sw.className='swatch'; sw.style.background = rgbString(wavelengthToRgb(f.emPeak));
+      const txt = document.createElement('div'); txt.innerHTML = `<strong>${f.name}</strong><div class="muted" style="font-size:0.85rem">exc ${f.excPeak} nm • em ${f.emPeak} nm</div>`;
+      item.appendChild(sw); item.appendChild(txt); legend.appendChild(item);
+    });
   }
-  selectedNames.forEach(name => {
-    const f = fluorophores.find(x => x.name === name); if (!f) return;
-    const item = document.createElement('div'); item.className = 'legend-item';
-    const sw = document.createElement('div'); sw.className = 'swatch'; sw.style.background = rgbString(wavelengthToRgb(f.emPeak));
-    const text = document.createElement('div'); text.innerHTML = `<strong>${f.name}</strong><div class="note">exc ${f.excPeak} nm • em ${f.emPeak} nm</div>`;
-    item.appendChild(sw); item.appendChild(text); legend.appendChild(item);
+  if (selFs.length){
+    const t2 = document.createElement('div'); t2.className='muted'; t2.style.marginTop='8px'; t2.textContent='Filter sets'; legend.appendChild(t2);
+    selFs.forEach(name => { const fs = filterSets.find(x=>x.name===name); if (!fs) return;
+      const item = document.createElement('div'); item.className='legend-item';
+      const sw = document.createElement('div'); sw.className='filter-swatch'; sw.style.background=fs.color; sw.style.opacity=0.18;
+      const txt = document.createElement('div'); txt.innerHTML = `<strong>${fs.name}</strong><div class="muted" style="font-size:0.85rem">EX ${fs.ex[0]}–${fs.ex[1]} nm • EM ${fs.em[0]}–${fs.em[1]} nm</div>`;
+      item.appendChild(sw); item.appendChild(txt); legend.appendChild(item);
+    });
+  }
+}
+
+/* ---------- Dropdown state & UI plumbing ---------- */
+const state = { fluoro: new Set(), filter: new Set() };
+
+function buildOptions(kind, names){
+  const container = document.getElementById(`options-${kind}`);
+  container.innerHTML = '';
+  names.forEach(name => {
+    const opt = document.createElement('div'); opt.className='option'; opt.tabIndex=0; opt.dataset.value = name;
+    const cb = document.createElement('div'); cb.className='opt-checkbox';
+    if ((kind==='fluoro' && state.fluoro.has(name)) || (kind==='filter' && state.filter.has(name))) cb.classList.add('checked');
+    const label = document.createElement('div'); label.textContent = name; label.style.flex='1';
+    opt.appendChild(cb); opt.appendChild(label);
+    opt.addEventListener('click', (e)=>{ toggleOption(kind, name, cb); e.stopPropagation(); });
+    opt.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleOption(kind, name, cb); }});
+    container.appendChild(opt);
   });
 }
 
-// UI wiring
-const selectEl = document.getElementById('fluoro-select');
-function populateSelect(){
-  fluorophores.forEach(f => { const opt = document.createElement('option'); opt.value = f.name; opt.textContent = f.name; selectEl.appendChild(opt); });
+function toggleOption(kind, name, cbEl){
+  const set = kind === 'fluoro' ? state.fluoro : state.filter;
+  if (set.has(name)) { set.delete(name); cbEl.classList.remove('checked'); }
+  else { set.add(name); cbEl.classList.add('checked'); }
+  refreshTags(kind);
+  drawFilters(Array.from(state.filter));
+  drawSpectra(Array.from(state.fluoro));
 }
 
-document.getElementById('select-all').addEventListener('click', () => {
-  for (let i=0;i<selectEl.options.length;i++) selectEl.options[i].selected = true; triggerUpdate();
-});
-document.getElementById('clear').addEventListener('click', () => {
-  for (let i=0;i<selectEl.options.length;i++) selectEl.options[i].selected = false; triggerUpdate();
-});
-selectEl.addEventListener('change', triggerUpdate);
-
-function triggerUpdate(){
-  const selected = Array.from(selectEl.selectedOptions).map(o => o.value);
-  drawSpectra(selected);
+function refreshTags(kind){
+  const tags = document.getElementById(`tags-${kind}`);
+  tags.innerHTML = '';
+  const arr = Array.from(kind==='fluoro' ? state.fluoro : state.filter);
+  if (arr.length === 0){
+    const hint = document.createElement('div'); hint.className='muted'; hint.style.fontSize='0.9rem'; hint.textContent = 'none';
+    tags.appendChild(hint); return;
+  }
+  arr.slice(0,4).forEach(name => { const t = document.createElement('div'); t.className='tag'; t.textContent = name; tags.appendChild(t); });
+  if (arr.length > 4){
+    const more = document.createElement('div'); more.className='tag'; more.textContent = `+${arr.length-4}`; tags.appendChild(more);
+  }
 }
 
-// Initial render
-populateSelect(); drawGrid();
-// Preselect some useful defaults
-['DAPI','Alexa Fluor 488','Alexa Fluor 594','Alexa Fluor 647'].forEach(name => {
-  const opt = Array.from(selectEl.options).find(o => o.value === name); if (opt) opt.selected = true;
-});
-triggerUpdate();
+function wirePanelToggle(kind){
+  const dd = document.getElementById(`dd-${kind}`);
+  const toggle = document.getElementById(`dd-${kind}-toggle`);
+  const panel = document.getElementById(`panel-${kind}`);
+  function open(){ dd.classList.add('dd-open'); toggle.setAttribute('aria-expanded','true'); }
+  function close(){ dd.classList.remove('dd-open'); toggle.setAttribute('aria-expanded','false'); }
+  toggle.addEventListener('click', (e)=>{ dd.classList.contains('dd-open') ? close() : open(); e.stopPropagation(); });
+  toggle.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dd.classList.contains('dd-open') ? close() : open(); }});
+  // close when clicking outside
+  document.addEventListener('click', (evt)=>{ if (!dd.contains(evt.target)) close(); });
+  // close on Escape
+  document.addEventListener('keydown', (evt)=>{ if (evt.key === 'Escape') close(); });
+}
 
+/* Search within panels */
+function wireSearch(kind){
+  const input = document.getElementById(`search-${kind}`);
+  input.addEventListener('input', (e)=>{
+    const q = (e.target.value || '').trim().toLowerCase();
+    const opts = document.querySelectorAll(`#options-${kind} .option`);
+    opts.forEach(opt => {
+      const txt = (opt.dataset.value || '').toLowerCase();
+      opt.style.display = !q || txt.includes(q) ? '' : 'none';
+    });
+  });
+}
+
+/* Actions */
+function wireActions(){
+  document.getElementById('fa-select-all').addEventListener('click', ()=>{ fluorophores.forEach(f=>state.fluoro.add(f.name)); buildOptions('fluoro', fluorophores.map(f=>f.name)); refreshTags('fluoro'); drawSpectra(Array.from(state.fluoro)); });
+  document.getElementById('fa-clear').addEventListener('click', ()=>{ state.fluoro.clear(); buildOptions('fluoro', fluorophores.map(f=>f.name)); refreshTags('fluoro'); drawSpectra([]); });
+  document.getElementById('fa-done').addEventListener('click', ()=>{ document.getElementById('dd-fluoro').classList.remove('dd-open'); });
+
+  document.getElementById('fs-select-all').addEventListener('click', ()=>{ filterSets.forEach(f=>state.filter.add(f.name)); buildOptions('filter', filterSets.map(f=>f.name)); refreshTags('filter'); drawFilters(Array.from(state.filter)); });
+  document.getElementById('fs-clear').addEventListener('click', ()=>{ state.filter.clear(); buildOptions('filter', filterSets.map(f=>f.name)); refreshTags('filter'); drawFilters([]); });
+  document.getElementById('fs-done').addEventListener('click', ()=>{ document.getElementById('dd-filter').classList.remove('dd-open'); });
+}
+
+/* Helpers */
+function getSelectedFromState(kind){ return Array.from(kind==='fluoro' ? state.fluoro : state.filter); }
+
+/* Initialize UI on DOM ready */
+window.addEventListener('DOMContentLoaded', ()=>{
+  // build option lists
+  buildOptions('fluoro', fluorophores.map(f=>f.name));
+  buildOptions('filter', filterSets.map(f=>f.name));
+
+  // wire toggles, search, actions
+  wirePanelToggle('fluoro'); wirePanelToggle('filter');
+  wireSearch('fluoro'); wireSearch('filter');
+  wireActions();
+
+  // set sensible defaults
+  ['DAPI','Alexa Fluor 488','Alexa Fluor 647'].forEach(n => state.fluoro.add(n));
+  ['DAPI (UV)','FITC/GFP','Cy5 / Alexa 647'].forEach(n => state.filter.add(n));
+  refreshTags('fluoro'); refreshTags('filter');
+
+  // initial render
+  drawGrid();
+  drawFilters(getSelectedFromState('filter'));
+  drawSpectra(getSelectedFromState('fluoro'));
+});
 </script>
 </body>
 </html>
