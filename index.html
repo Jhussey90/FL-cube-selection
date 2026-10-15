@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fluorophore Spectra — Custom Filters</title>
+  <title>Fluorophore Spectra — Custom Filters (Filters Start Blank)</title>
   <style>
     :root{--bg:#f5f7fb;--panel:#fff;--text:#1d2a39;--muted:#5b6876;--accent:#2b6be3}
     html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#f4f7fb 0%,#edf2f8 100%);color:var(--text);display:flex;justify-content:center;padding:24px}
@@ -230,7 +230,7 @@ function drawGrid(){
   svg.appendChild(g);
 }
 
-/* ---------- Draw spectra & filter overlays, with hit paths and tooltips ---------- */
+/* ---------- Draw spectra & filters ---------- */
 function drawSpectra(selectedNames){
   const old = svg.querySelector('#spectra-group'); if (old) old.remove();
   const g = createSvg('g',{id:'spectra-group'});
@@ -272,7 +272,6 @@ function drawFilters(selectedFilterNames){
 
   selectedFilterNames.forEach(fname => {
     const fs = filterSets.find(x => x.name === fname); if (!fs) return;
-    // For long-pass, type === 'long' -> we draw em from low->800
     const exLow = Math.max(350, Array.isArray(fs.ex) ? fs.ex[0] : 350);
     const exHigh = Math.min(800, Array.isArray(fs.ex) ? fs.ex[1] : 800);
     const emLow = Math.max(350, Array.isArray(fs.em) ? fs.em[0] : (fs.type === 'long' ? fs.em[0] : 350));
@@ -281,12 +280,10 @@ function drawFilters(selectedFilterNames){
     const exX = xForWavelength(exLow), exW = xForWavelength(exHigh) - exX;
     const emX = xForWavelength(emLow), emW = xForWavelength(emHigh) - emX;
 
-    // excitation band
     const exRect = createSvg('rect',{x:exX,y:topY,width:Math.max(exW,1),height:plotHeight,fill:fs.color,'fill-opacity':0.10,stroke:fs.color,'stroke-width':1,'stroke-dasharray':'4 4'});
     exRect.style.cursor='pointer'; exRect._meta = { name:fs.name, band:'Excitation', range:[exLow, exHigh], color:fs.color, type:fs.type }; attachFilterHover(exRect); layer.appendChild(exRect);
     layer.appendChild(createSvg('text',{x:exX+Math.max(6,exW/2),y:topY-12,'text-anchor':'middle','font-size':12,fill:fs.color})).textContent = fs.name + (fs.type==='long' ? ' (LP EX)' : ' (EX)');
 
-    // emission band
     const emRect = createSvg('rect',{x:emX,y:topY,width:Math.max(emW,1),height:plotHeight,fill:fs.color,'fill-opacity':0.08,stroke:fs.color,'stroke-width':1,'stroke-dasharray':'2 6'});
     emRect.style.cursor='pointer'; emRect._meta = { name:fs.name, band:'Emission', range:[emLow, emHigh], color:fs.color, type:fs.type }; attachFilterHover(emRect); layer.appendChild(emRect);
     layer.appendChild(createSvg('text',{x:emX+Math.max(6,emW/2),y:bottomY+18,'text-anchor':'middle','font-size':12,fill:fs.color})).textContent = fs.name + (fs.type==='long' ? ' (LP EM)' : ' (EM)');
@@ -397,7 +394,7 @@ function refreshTags(kind){
   if (arr.length > 4){ const more = document.createElement('div'); more.className='tag'; more.textContent = `+${arr.length-4}`; tags.appendChild(more); }
 }
 
-/* Panel toggles and search */
+/* Panel toggles, search, actions (same as before) */
 function wirePanelToggle(kind){
   const dd = document.getElementById(`dd-${kind}`), toggle = document.getElementById(`dd-${kind}-toggle`);
   function open(){ dd.classList.add('dd-open'); toggle.setAttribute('aria-expanded','true'); }
@@ -420,7 +417,6 @@ function wireSearch(kind){
   });
 }
 
-/* Actions & custom-filter addition */
 function wireActions(){
   document.getElementById('fa-select-all').addEventListener('click', ()=>{ fluorophores.forEach(f=>state.fluoro.add(f.name)); buildOptions('fluoro', fluorophores.map(f=>f.name)); refreshTags('fluoro'); drawSpectra(Array.from(state.fluoro)); });
   document.getElementById('fa-clear').addEventListener('click', ()=>{ state.fluoro.clear(); buildOptions('fluoro', fluorophores.map(f=>f.name)); refreshTags('fluoro'); drawSpectra([]); });
@@ -431,7 +427,6 @@ function wireActions(){
   document.getElementById('fs-select-all')?.addEventListener?.('click', ()=>{ filterSets.forEach(f=>state.filter.add(f.name)); buildOptions('filter', filterSets.map(f=>f.name)); refreshTags('filter'); drawFilters(Array.from(state.filter)); });
   document.getElementById('fs-clear')?.addEventListener?.('click', ()=>{ state.filter.clear(); buildOptions('filter', filterSets.map(f=>f.name)); refreshTags('filter'); drawFilters([]); });
 
-  // Custom filter add
   document.getElementById('custom-add').addEventListener('click', () => {
     const name = document.getElementById('custom-name').value.trim();
     const color = document.getElementById('custom-color').value || '#8e44ad';
@@ -442,18 +437,13 @@ function wireActions(){
     const emHigh = Number(document.getElementById('custom-em-high').value);
     const err = document.getElementById('custom-error');
 
-    // Validation
     if (!name) { err.style.display='block'; err.textContent = 'Please provide a filter name.'; return; }
     if (type === 'band') {
       if (!(exLow < exHigh && emLow < emHigh)) { err.style.display='block'; err.textContent = 'For bandpass, low < high for both excitation and emission.'; return; }
       if (exLow < 200 || emLow < 200 || exHigh > 1200 || emHigh > 1200) { err.style.display='block'; err.textContent = 'Wavelength values out of range.'; return; }
-    } else {
-      // long pass: ex is full range or optional; emLow must be < emHigh (emHigh will be set to 800)
-      if (!(emLow < emHigh || emLow <= emHigh)) { /* allow emHigh unused */ }
     }
     err.style.display='none';
 
-    // Create filter object: for long-pass, ensure em range uses emLow..800; for bandpass use given ranges.
     let newFilter;
     if (type === 'long') {
       const emStart = Math.max(350, emLow || 600);
@@ -462,14 +452,12 @@ function wireActions(){
       newFilter = { name: name, ex: [exLow, exHigh], em: [emLow, emHigh], color: color, type: 'band' };
     }
 
-    // Add to filterSets, rebuild options and auto-select new filter
     filterSets.push(newFilter);
     buildOptions('filter', filterSets.map(f=>f.name));
     state.filter.add(newFilter.name);
     refreshTags('filter');
     drawFilters(Array.from(state.filter));
     document.getElementById('custom-name').value = '';
-    // optionally close panel or keep open — keep open so user can add multiple
   });
 
   document.getElementById('custom-reset').addEventListener('click', () => {
@@ -483,26 +471,20 @@ function wireActions(){
   });
 }
 
-/* Helpers */
 function getSelectedFromState(kind){ return Array.from(kind==='fluoro' ? state.fluoro : state.filter); }
 
-/* ---------- Initialize on DOMContentLoaded ---------- */
 window.addEventListener('DOMContentLoaded', () => {
-  // initial options
   buildOptions('fluoro', fluorophores.map(f=>f.name));
   buildOptions('filter', filterSets.map(f=>f.name));
-
-  // wire UI
   wirePanelToggle('fluoro'); wirePanelToggle('filter');
   wireSearch('fluoro'); wireSearch('filter');
   wireActions();
 
-  // sensible defaults
+  // Fluorophore defaults kept; FILTERS intentionally start blank
   ['DAPI','Alexa Fluor 488','Cy5'].forEach(n => { const f = fluorophores.find(x=>x.name===n); if (f) state.fluoro.add(n); });
-  ['DAPI (band)','FITC/GFP (band)','Green LP (em > 500)'].forEach(n => { const fs = filterSets.find(x=>x.name===n); if (fs) state.filter.add(n); });
+  // NOTE: removed filter pre-selections so filters start blank
   refreshTags('fluoro'); refreshTags('filter');
 
-  // initial plot
   drawGrid();
   drawFilters(getSelectedFromState('filter'));
   drawSpectra(getSelectedFromState('fluoro'));
