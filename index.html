@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fluorophore Spectra — Collapsible Searchable Dropdowns (Fixed)</title>
+  <title>Fluorophore Spectra — Collapsible Searchable Dropdowns (Fixed v2)</title>
   <style>
     :root{
       --bg:#f5f7fb; --panel:#fff; --text:#1d2a39; --muted:#5b6876; --accent:#2b6be3;
@@ -58,7 +58,7 @@
 <body>
   <div class="card" role="application" aria-label="Fluorophore + filter viewer">
     <header>
-      <h1>Fluorophore Spectra — Collapsible Searchable Dropdowns (Fixed)</h1>
+      <h1>Fluorophore Spectra — Collapsible Searchable Dropdowns (Fixed v2)</h1>
       <div style="display:flex;gap:12px;align-items:center">
         <div class="muted">Select fluorophores and filter sets to display</div>
       </div>
@@ -199,13 +199,13 @@ const ttText = document.getElementById('tt-text');
 const ttSw = tooltip.querySelector('.sw');
 
 const width = 1200, height = 760;
-const left = 120, right = 930, top = 80, bottom = 640;
-const plotWidth = right - left, plotHeight = bottom - top;
+const leftX = 120, rightX = 930, topY = 80, bottomY = 640;
+const plotWidth = rightX - leftX, plotHeight = bottomY - topY;
 svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
 function gaussian(w, peak, fwhm) { const sigma = fwhm / (2 * Math.sqrt(2 * Math.log(2))); return Math.exp(-0.5 * Math.pow((w - peak) / sigma, 2)); }
-function wavelengthToRgb(w) {
-  const wv = Number(w);
+function wavelengthToRgb(wavelength) {
+  const wv = Number(wavelength);
   if (wv < 380 || wv > 780) return { r: 0, g: 0, b: 0 };
   let r = 0, g = 0, b = 0;
   if (wv < 440) { r = -(wv - 440) / (440 - 380); b = 1; }
@@ -222,9 +222,9 @@ function wavelengthToRgb(w) {
   return { r: adj(r), g: adj(g), b: adj(b) };
 }
 function rgbString(rgb) { const r = Math.round(rgb.r*255), g = Math.round(rgb.g*255), b = Math.round(rgb.b*255); return `rgb(${r},${g},${b})`; }
-function xForWavelength(w){ const min=350,max=800; return left + ((w-min)/(max-min)) * plotWidth; }
-function wavelengthForX(xSvg){ const min=350,max=800; return min + ((xSvg-left)/plotWidth)*(max-min); }
-function yForIntensity(v){ return bottom - v * plotHeight; }
+function xForWavelength(w){ const min=350,max=800; return leftX + ((w-min)/(max-min)) * plotWidth; }
+function wavelengthForX(xSvg){ const min=350,max=800; return min + ((xSvg-leftX)/plotWidth)*(max-min); }
+function yForIntensity(v){ return bottomY - v * plotHeight; }
 function createSvg(tag, attrs={}){ const el = document.createElementNS('http://www.w3.org/2000/svg', tag); Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v)); return el; }
 
 /* ---------- Grid & drawing ---------- */
@@ -233,24 +233,24 @@ function drawGrid(){
   const g = createSvg('g',{id:'base-layer'});
   [350,400,450,500,550,600,650,700,750,800].forEach(tick => {
     const x = xForWavelength(tick);
-    g.appendChild(createSvg('line',{x1:x,y1:top,x2:x,y2:bottom,stroke:'#e7eef6','stroke-width':1}));
-    const lab = createSvg('text',{x:x,y:bottom+24,'text-anchor':'middle',fill:'#5b6876','font-size':12});
+    g.appendChild(createSvg('line',{x1:x,y1:topY,x2:x,y2:bottomY,stroke:'#e7eef6','stroke-width':1}));
+    const lab = createSvg('text',{x:x,y:bottomY+24,'text-anchor':'middle',fill:'#5b6876','font-size':12});
     lab.textContent = tick; g.appendChild(lab);
   });
   [0,0.2,0.4,0.6,0.8,1.0].forEach(t => {
     const y = yForIntensity(t);
-    g.appendChild(createSvg('line',{x1:left,y1:y,x2:right,y2:y,stroke:'#eef6fb','stroke-width':1}));
-    const lab = createSvg('text',{x:left-14,y:y+4,'text-anchor':'end',fill:'#5b6876','font-size':12}); lab.textContent = t.toFixed(1); g.appendChild(lab);
+    g.appendChild(createSvg('line',{x1:leftX,y1:y,x2:rightX,y2:y,stroke:'#eef6fb','stroke-width':1}));
+    const lab = createSvg('text',{x:leftX-14,y:y+4,'text-anchor':'end',fill:'#5b6876','font-size':12}); lab.textContent = t.toFixed(1); g.appendChild(lab);
   });
-  g.appendChild(createSvg('line',{x1:left,y1:bottom,x2:right,y2:bottom,stroke:'#6b7a8c','stroke-width':2}));
-  g.appendChild(createSvg('line',{x1:left,y1:top,x2:left,y2:bottom,stroke:'#6b7a8c','stroke-width':2}));
-  const title = createSvg('text',{x:(left+right)/2,y:34,'text-anchor':'middle','font-size':20,'font-weight':700}); title.textContent = 'Fluorophore Excitation and Emission Spectra'; g.appendChild(title);
-  g.appendChild(createSvg('text',{x:(left+right)/2,y:700,'text-anchor':'middle','font-size':16})).textContent = 'Wavelength (nm)';
-  g.appendChild(createSvg('text',{x:24,y:(top+bottom)/2,transform:`rotate(-90 24 ${(top+bottom)/2})`,'text-anchor':'middle','font-size':16})).textContent='Relative intensity';
+  g.appendChild(createSvg('line',{x1:leftX,y1:bottomY,x2:rightX,y2:bottomY,stroke:'#6b7a8c','stroke-width':2}));
+  g.appendChild(createSvg('line',{x1:leftX,y1:topY,x2:leftX,y2:bottomY,stroke:'#6b7a8c','stroke-width':2}));
+  const title = createSvg('text',{x:(leftX+rightX)/2,y:34,'text-anchor':'middle','font-size':20,'font-weight':700}); title.textContent = 'Fluorophore Excitation and Emission Spectra'; g.appendChild(title);
+  g.appendChild(createSvg('text',{x:(leftX+rightX)/2,y:700,'text-anchor':'middle','font-size':16})).textContent = 'Wavelength (nm)';
+  g.appendChild(createSvg('text',{x:24,y:(topY+bottomY)/2,transform:`rotate(-90 24 ${(topY+bottomY)/2})`,'text-anchor':'middle','font-size':16})).textContent='Relative intensity';
   svg.appendChild(g);
 }
 
-/* ---------- Spectra & filter drawing (with hit paths & tooltip handling) ---------- */
+/* ---------- Spectra & filter drawing ---------- */
 function drawSpectra(selectedNames){
   const old = svg.querySelector('#spectra-group'); if (old) old.remove();
   const g = createSvg('g',{id:'spectra-group'});
@@ -268,7 +268,7 @@ function drawSpectra(selectedNames){
     const color = rgbString(wavelengthToRgb(f.emPeak));
 
     g.appendChild(createSvg('path',{d:pathFrom(excPts),fill:'none',stroke:color,'stroke-width':2,'stroke-dasharray':'8 6','opacity':0.9}));
-    const areaStr = pathFrom(emPts)+` L ${xForWavelength(800)} ${bottom} L ${xForWavelength(350)} ${bottom} Z`;
+    const areaStr = pathFrom(emPts)+` L ${xForWavelength(800)} ${bottomY} L ${xForWavelength(350)} ${bottomY} Z`;
     g.appendChild(createSvg('path',{d:areaStr,fill:color,'fill-opacity':0.18,stroke:color,'stroke-width':1.2,'opacity':0.9}));
     g.appendChild(createSvg('path',{d:pathFrom(emPts),fill:'none',stroke:color,'stroke-width':2.5,'opacity':1.0}));
 
@@ -296,13 +296,13 @@ function drawFilters(selectedFilterNames){
     const exX = xForWavelength(exLow), exW = xForWavelength(exHigh)-exX;
     const emX = xForWavelength(emLow), emW = xForWavelength(emHigh)-emX;
 
-    const exRect = createSvg('rect',{x:exX,y:top,width:Math.max(exW,1),height:plotHeight,fill:fs.color,'fill-opacity':0.10,stroke:fs.color,'stroke-width':1,'stroke-dasharray':'4 4'});
+    const exRect = createSvg('rect',{x:exX,y:topY,width:Math.max(exW,1),height:plotHeight,fill:fs.color,'fill-opacity':0.10,stroke:fs.color,'stroke-width':1,'stroke-dasharray':'4 4'});
     exRect.style.cursor='pointer'; exRect._meta = { name:fs.name, band:'Excitation', range:[exLow,exHigh], color:fs.color }; attachFilterHover(exRect); layer.appendChild(exRect);
-    layer.appendChild(createSvg('text',{x:exX+Math.max(6,exW/2),y:top-12,'text-anchor':'middle','font-size':12,fill:fs.color})).textContent = fs.name + ' (EX)';
+    layer.appendChild(createSvg('text',{x:exX+Math.max(6,exW/2),y:topY-12,'text-anchor':'middle','font-size':12,fill:fs.color})).textContent = fs.name + ' (EX)';
 
-    const emRect = createSvg('rect',{x:emX,y:top,width:Math.max(emW,1),height:plotHeight,fill:fs.color,'fill-opacity':0.08,stroke:fs.color,'stroke-width':1,'stroke-dasharray':'2 6'});
+    const emRect = createSvg('rect',{x:emX,y:topY,width:Math.max(emW,1),height:plotHeight,fill:fs.color,'fill-opacity':0.08,stroke:fs.color,'stroke-width':1,'stroke-dasharray':'2 6'});
     emRect.style.cursor='pointer'; emRect._meta = { name:fs.name, band:'Emission', range:[emLow,emHigh], color:fs.color }; attachFilterHover(emRect); layer.appendChild(emRect);
-    layer.appendChild(createSvg('text',{x:emX+Math.max(6,emW/2),y:bottom+18,'text-anchor':'middle','font-size':12,fill:fs.color})).textContent = fs.name + ' (EM)';
+    layer.appendChild(createSvg('text',{x:emX+Math.max(6,emW/2),y:bottomY+18,'text-anchor':'middle','font-size':12,fill:fs.color})).textContent = fs.name + ' (EM)';
   });
   svg.appendChild(layer);
   updateLegend();
@@ -425,13 +425,10 @@ function wirePanelToggle(kind){
   function close(){ dd.classList.remove('dd-open'); toggle.setAttribute('aria-expanded','false'); }
   toggle.addEventListener('click', (e)=>{ dd.classList.contains('dd-open') ? close() : open(); e.stopPropagation(); });
   toggle.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dd.classList.contains('dd-open') ? close() : open(); }});
-  // close when clicking outside
   document.addEventListener('click', (evt)=>{ if (!dd.contains(evt.target)) close(); });
-  // close on Escape
   document.addEventListener('keydown', (evt)=>{ if (evt.key === 'Escape') close(); });
 }
 
-/* Search within panels */
 function wireSearch(kind){
   const input = document.getElementById(`search-${kind}`);
   input.addEventListener('input', (e)=>{
@@ -444,7 +441,6 @@ function wireSearch(kind){
   });
 }
 
-/* Actions */
 function wireActions(){
   document.getElementById('fa-select-all').addEventListener('click', ()=>{ fluorophores.forEach(f=>state.fluoro.add(f.name)); buildOptions('fluoro', fluorophores.map(f=>f.name)); refreshTags('fluoro'); drawSpectra(Array.from(state.fluoro)); });
   document.getElementById('fa-clear').addEventListener('click', ()=>{ state.fluoro.clear(); buildOptions('fluoro', fluorophores.map(f=>f.name)); refreshTags('fluoro'); drawSpectra([]); });
@@ -455,26 +451,21 @@ function wireActions(){
   document.getElementById('fs-done').addEventListener('click', ()=>{ document.getElementById('dd-filter').classList.remove('dd-open'); });
 }
 
-/* Helpers */
 function getSelectedFromState(kind){ return Array.from(kind==='fluoro' ? state.fluoro : state.filter); }
 
-/* Initialize UI on DOM ready */
+/* ---------- Initialize ---------- */
 window.addEventListener('DOMContentLoaded', ()=>{
-  // build option lists
   buildOptions('fluoro', fluorophores.map(f=>f.name));
   buildOptions('filter', filterSets.map(f=>f.name));
-
-  // wire toggles, search, actions
   wirePanelToggle('fluoro'); wirePanelToggle('filter');
   wireSearch('fluoro'); wireSearch('filter');
   wireActions();
 
-  // set sensible defaults
+  // defaults
   ['DAPI','Alexa Fluor 488','Alexa Fluor 647'].forEach(n => state.fluoro.add(n));
   ['DAPI (UV)','FITC/GFP','Cy5 / Alexa 647'].forEach(n => state.filter.add(n));
   refreshTags('fluoro'); refreshTags('filter');
 
-  // initial render
   drawGrid();
   drawFilters(getSelectedFromState('filter'));
   drawSpectra(getSelectedFromState('fluoro'));
