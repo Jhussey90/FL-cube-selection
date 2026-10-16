@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GT Vision Fluorescence filter selection guide </title>
+  <title>Fluorophore Spectra — Custom Filters (180–800 nm)</title>
   <style>
     :root{--bg:#f5f7fb;--panel:#fff;--text:#1d2a39;--muted:#5b6876;--accent:#2b6be3}
     html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#f4f7fb 0%,#edf2f8 100%);color:var(--text);display:flex;justify-content:center;padding:24px}
@@ -48,7 +48,7 @@
 <body>
   <div class="card" role="application" aria-label="Fluorophore + filter viewer with custom filters">
     <header>
-      <h1>GT Vision Fluorescence filter selection guide</h1>
+      <h1>Fluorophore Spectra — Selections Start Blank (180–800 nm)</h1>
       <div class="muted">Add/select fluorophores and filters to visualize</div>
     </header>
 
@@ -105,22 +105,22 @@
           <div style="display:flex;gap:8px;margin-top:8px">
             <div style="flex:1">
               <label class="small">Excitation low (nm):</label>
-              <input id="custom-ex-low" type="number" min="200" max="1200" value="400" />
+              <input id="custom-ex-low" type="number" min="100" max="1200" value="400" />
             </div>
             <div style="flex:1">
               <label class="small">Excitation high (nm):</label>
-              <input id="custom-ex-high" type="number" min="200" max="1200" value="500" />
+              <input id="custom-ex-high" type="number" min="100" max="1200" value="500" />
             </div>
           </div>
 
           <div style="display:flex;gap:8px;margin-top:8px">
             <div style="flex:1">
               <label class="small">Emission low (nm):</label>
-              <input id="custom-em-low" type="number" min="200" max="1200" value="510" />
+              <input id="custom-em-low" type="number" min="100" max="1200" value="510" />
             </div>
             <div style="flex:1">
               <label class="small">Emission high (nm):</label>
-              <input id="custom-em-high" type="number" min="200" max="1200" value="540" />
+              <input id="custom-em-high" type="number" min="100" max="1200" value="540" />
             </div>
           </div>
 
@@ -149,10 +149,14 @@
       </aside>
     </div>
 
-    <footer>Wavelength axis: 350–800 nm. Values are synthetic approximations for visualization.</footer>
+    <footer>Wavelength axis: 180–800 nm. Values are synthetic approximations for visualization.</footer>
   </div>
 
 <script>
+/* ---------- Domain constants ---------- */
+const MIN_WAVELENGTH = 180;
+const MAX_WAVELENGTH = 800;
+
 /* ---------- Prebuilt fluorophores & filters (including long-pass examples) ---------- */
 const fluorophores = [
   { name: "DAPI", excPeak: 358, excFwhm: 20, emPeak: 461, emFwhm: 25 },
@@ -170,8 +174,8 @@ const filterSets = [
   { name: "Cy5 (band)", ex: [630,660], em: [660,700], color: "#9b59b6", type: "band" },
 
   // long-pass examples (emission long-pass commonly used)
-  { name: "Green LP (em > 500)", ex: [350,800], em: [500,800], color: "#4cd964", type: "long" },
-  { name: "Red LP (em > 600)", ex: [350,800], em: [600,800], color: "#ff6b6b", type: "long" }
+  { name: "Green LP (em > 500)", ex: [MIN_WAVELENGTH,MAX_WAVELENGTH], em: [500,MAX_WAVELENGTH], color: "#4cd964", type: "long" },
+  { name: "Red LP (em > 600)", ex: [MIN_WAVELENGTH,MAX_WAVELENGTH], em: [600,MAX_WAVELENGTH], color: "#ff6b6b", type: "long" }
 ];
 
 /* ---------- Plot geometry & utilities ---------- */
@@ -204,8 +208,8 @@ function wavelengthToRgb(wavelength) {
   return { r: adj(r), g: adj(g), b: adj(b) };
 }
 function rgbString(rgb) { const r = Math.round(rgb.r*255), g = Math.round(rgb.g*255), b = Math.round(rgb.b*255); return `rgb(${r},${g},${b})`; }
-function xForWavelength(w){ const min=350,max=800; return leftX + ((w-min)/(max-min)) * plotWidth; }
-function wavelengthForX(xSvg){ const min=350,max=800; return min + ((xSvg-leftX)/plotWidth)*(max-min); }
+function xForWavelength(w){ const min = MIN_WAVELENGTH, max = MAX_WAVELENGTH; return leftX + ((w-min)/(max-min)) * plotWidth; }
+function wavelengthForX(xSvg){ const min = MIN_WAVELENGTH, max = MAX_WAVELENGTH; return min + ((xSvg-leftX)/plotWidth)*(max-min); }
 function yForIntensity(v){ return bottomY - v * plotHeight; }
 function createSvg(tag, attrs={}){ const el = document.createElementNS('http://www.w3.org/2000/svg', tag); Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v)); return el; }
 
@@ -213,28 +217,34 @@ function createSvg(tag, attrs={}){ const el = document.createElementNS('http://w
 function drawGrid(){
   const base = svg.querySelector('#base-layer'); if (base) base.remove();
   const g = createSvg('g',{id:'base-layer'});
-  [350,400,450,500,550,600,650,700,750,800].forEach(tick => {
+
+  // Ticks chosen to cover the 180–800 range nicely
+  const xTicks = [MIN_WAVELENGTH, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, MAX_WAVELENGTH];
+  xTicks.forEach(tick => {
     const x = xForWavelength(tick);
     g.appendChild(createSvg('line',{x1:x,y1:topY,x2:x,y2:bottomY,stroke:'#e7eef6','stroke-width':1}));
     const lab = createSvg('text',{x:x,y:bottomY+24,'text-anchor':'middle',fill:'#5b6876','font-size':12}); lab.textContent = tick; g.appendChild(lab);
   });
+
   [0,0.2,0.4,0.6,0.8,1.0].forEach(t => {
     const y = yForIntensity(t); g.appendChild(createSvg('line',{x1:leftX,y1:y,x2:rightX,y2:y,stroke:'#eef6fb','stroke-width':1}));
     const lab = createSvg('text',{x:leftX-14,y:y+4,'text-anchor':'end',fill:'#5b6876','font-size':12}); lab.textContent = t.toFixed(1); g.appendChild(lab);
   });
+
   g.appendChild(createSvg('line',{x1:leftX,y1:bottomY,x2:rightX,y2:bottomY,stroke:'#6b7a8c','stroke-width':2}));
   g.appendChild(createSvg('line',{x1:leftX,y1:topY,x2:leftX,y2:bottomY,stroke:'#6b7a8c','stroke-width':2}));
-  const title = createSvg('text',{x:(leftX+rightX)/2,y:34,'text-anchor':'middle','font-size':20,'font-weight':700}); title.textContent = 'Fluorophore Excitation and Emission Spectra'; g.appendChild(title);
+  const title = createSvg('text',{x:(leftX+rightX)/2,y:34,'text-anchor':'middle','font-size':20,'font-weight':700}); title.textContent = `Fluorophore Excitation and Emission Spectra (${MIN_WAVELENGTH}–${MAX_WAVELENGTH} nm)`; g.appendChild(title);
   g.appendChild(createSvg('text',{x:(leftX+rightX)/2,y:700,'text-anchor':'middle','font-size':16})).textContent = 'Wavelength (nm)';
   g.appendChild(createSvg('text',{x:24,y:(topY+bottomY)/2,transform:`rotate(-90 24 ${(topY+bottomY)/2})`,'text-anchor':'middle','font-size':16})).textContent='Relative intensity';
   svg.appendChild(g);
 }
 
-/* ---------- Draw spectra & filters ---------- */
+/* ---------- Draw spectra & filters (uses MIN/MAX) ---------- */
 function drawSpectra(selectedNames){
   const old = svg.querySelector('#spectra-group'); if (old) old.remove();
   const g = createSvg('g',{id:'spectra-group'});
-  const wavelengths = []; const step=2; for (let w=350; w<=800; w+=step) wavelengths.push(w);
+  const wavelengths = []; const step=2;
+  for (let w = MIN_WAVELENGTH; w <= MAX_WAVELENGTH; w += step) wavelengths.push(w);
 
   selectedNames.forEach(name => {
     const f = fluorophores.find(x => x.name === name); if (!f) return;
@@ -248,7 +258,7 @@ function drawSpectra(selectedNames){
     const color = rgbString(wavelengthToRgb(f.emPeak));
 
     g.appendChild(createSvg('path',{d:pathFrom(excPts),fill:'none',stroke:color,'stroke-width':2,'stroke-dasharray':'8 6','opacity':0.9}));
-    const areaStr = pathFrom(emPts)+` L ${xForWavelength(800)} ${bottomY} L ${xForWavelength(350)} ${bottomY} Z`;
+    const areaStr = pathFrom(emPts)+` L ${xForWavelength(MAX_WAVELENGTH)} ${bottomY} L ${xForWavelength(MIN_WAVELENGTH)} ${bottomY} Z`;
     g.appendChild(createSvg('path',{d:areaStr,fill:color,'fill-opacity':0.18,stroke:color,'stroke-width':1.2,'opacity':0.9}));
     g.appendChild(createSvg('path',{d:pathFrom(emPts),fill:'none',stroke:color,'stroke-width':2.5,'opacity':1.0}));
 
@@ -272,10 +282,10 @@ function drawFilters(selectedFilterNames){
 
   selectedFilterNames.forEach(fname => {
     const fs = filterSets.find(x => x.name === fname); if (!fs) return;
-    const exLow = Math.max(350, Array.isArray(fs.ex) ? fs.ex[0] : 350);
-    const exHigh = Math.min(800, Array.isArray(fs.ex) ? fs.ex[1] : 800);
-    const emLow = Math.max(350, Array.isArray(fs.em) ? fs.em[0] : (fs.type === 'long' ? fs.em[0] : 350));
-    const emHigh = Math.min(800, Array.isArray(fs.em) ? fs.em[1] : 800);
+    const exLow = Math.max(MIN_WAVELENGTH, Array.isArray(fs.ex) ? fs.ex[0] : MIN_WAVELENGTH);
+    const exHigh = Math.min(MAX_WAVELENGTH, Array.isArray(fs.ex) ? fs.ex[1] : MAX_WAVELENGTH);
+    const emLow = Math.max(MIN_WAVELENGTH, Array.isArray(fs.em) ? fs.em[0] : (fs.type === 'long' ? fs.em[0] : MIN_WAVELENGTH));
+    const emHigh = Math.min(MAX_WAVELENGTH, Array.isArray(fs.em) ? fs.em[1] : MAX_WAVELENGTH);
 
     const exX = xForWavelength(exLow), exW = xForWavelength(exHigh) - exX;
     const emX = xForWavelength(emLow), emW = xForWavelength(emHigh) - emX;
@@ -440,14 +450,14 @@ function wireActions(){
     if (!name) { err.style.display='block'; err.textContent = 'Please provide a filter name.'; return; }
     if (type === 'band') {
       if (!(exLow < exHigh && emLow < emHigh)) { err.style.display='block'; err.textContent = 'For bandpass, low < high for both excitation and emission.'; return; }
-      if (exLow < 200 || emLow < 200 || exHigh > 1200 || emHigh > 1200) { err.style.display='block'; err.textContent = 'Wavelength values out of range.'; return; }
+      if (exLow < 100 || emLow < 100 || exHigh > 2000 || emHigh > 2000) { err.style.display='block'; err.textContent = 'Wavelength values out of range.'; return; }
     }
     err.style.display='none';
 
     let newFilter;
     if (type === 'long') {
-      const emStart = Math.max(350, emLow || 600);
-      newFilter = { name: name, ex: [350,800], em: [emStart,800], color: color, type: 'long' };
+      const emStart = Math.max(MIN_WAVELENGTH, emLow || 600);
+      newFilter = { name: name, ex: [MIN_WAVELENGTH, MAX_WAVELENGTH], em: [emStart, MAX_WAVELENGTH], color: color, type: 'long' };
     } else {
       newFilter = { name: name, ex: [exLow, exHigh], em: [emLow, emHigh], color: color, type: 'band' };
     }
